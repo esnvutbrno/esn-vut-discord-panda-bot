@@ -2,19 +2,7 @@ import random
 
 import discord
 
-# noinspection PyUnresolvedReferences
-from . import bot, config, motivation, welcome, speedfriending
-
-
-@bot.event
-async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
-    print('------')
-
-    await bot.change_presence(activity=discord.Activity(name=f'panda!',
-                                                        type=discord.ActivityType.listening))
+from .. import bot
 
 
 @bot.command()
@@ -62,7 +50,3 @@ async def cool(ctx):
 async def _bot(ctx):
     """Is the bot cool?"""
     await ctx.send('Yes, the bot is cool.')
-
-
-def main():
-    bot.run(config('BOT_TOKEN'))

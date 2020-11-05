@@ -1,10 +1,12 @@
+from datetime import datetime
 from random import choice
-from typing import Union
+from typing import Optional
 
-from discord import Member
+from discord import Member, Role
 from discord.ext.commands import Context
 
-from . import bot
+from .. import bot
+from ..utils import local_seed
 
 QUOTES = (
     "“Service to others is the rent you pay for your room here on Earth.”**  — Muhammad Ali** ",
@@ -60,7 +62,33 @@ QUOTES = (
 )
 
 
-@bot.command(description='Send me some supportive quote!')
-async def motivate(ctx: Context, who: Member = None):
+@bot.command(
+    description='Send me some supportive quote!',
+    brief='Do you want to motivate somebody?',
+)
+async def motivate(ctx: Context, who: Optional[Member] = None):
     eol = '\n'
     await ctx.send(f"{f'Only for {who.mention}:{eol}' if who else ''}> {choice(QUOTES)}")
+
+
+@bot.command(
+    description='Tell me Panda\'s favorite member',
+    brief='Who is Panda\'s favorite member?',
+    usage='[<user-role-to-choose-member-from>]',
+    aliases=('favourite',)
+)
+async def favorite(ctx: Context, role: Optional[Role] = None):
+    members = role.members if role else ctx.guild.members
+
+    if not members:
+        await ctx.message.add_reaction('⁉️')
+        return
+
+    now = datetime.now()
+    with local_seed(hash(f'{now.day}-{now.hour}-{now.minute // 10}')):
+        fav_member = choice(members)
+
+    if role:
+        await ctx.send(f"My favorite member of {role} is now {fav_member.mention}. ❤️")
+    else:
+        await ctx.send(f"My favorite member is now {fav_member.mention}. ❤️")

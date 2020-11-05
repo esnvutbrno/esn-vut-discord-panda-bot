@@ -10,7 +10,7 @@ logging.basicConfig(level=config('LOG_LEVEL', cast=int, default=logging.INFO))
 
 logger = logging.getLogger(__name__)
 
-description = '''Hello, I am Panda! :panda: How can I help you?'''
+description = '''Hello, I am Panda!\n'''
 
 intents = discord.Intents.default()
 intents.members = True
@@ -21,6 +21,6 @@ bot = commands.Bot(
     intents=intents
 )
 
-from .bot import main
+from .main import main
 
 __all__ = ['main', 'bot', 'config', 'logger']
