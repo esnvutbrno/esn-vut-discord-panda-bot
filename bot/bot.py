@@ -1,12 +1,10 @@
-# This example requires the 'members' privileged intents
-
 import random
 
 import discord
 
-from . import bot, config
+# noinspection PyUnresolvedReferences
+from . import bot, config, motivation, welcome, speedfriending
 
-from . import motivation
 
 @bot.event
 async def on_ready():
@@ -14,6 +12,9 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+
+    await bot.change_presence(activity=discord.Activity(name=f'panda!',
+                                                        type=discord.ActivityType.listening))
 
 
 @bot.command()

@@ -15,6 +15,12 @@ description = '''Hello, I am Panda! :panda: How can I help you?'''
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='panda ', description=description, intents=intents)
+bot = commands.Bot(
+    command_prefix=('panda? ', 'panda?', 'panda! ', 'panda!', 'panda '),
+    description=description,
+    intents=intents
+)
 
 from .bot import main
+
+__all__ = ['main', 'bot', 'config', 'logger']
