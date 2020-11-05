@@ -79,7 +79,7 @@ async def motivate(ctx: Context, who: Optional[Member] = None):
     aliases=('favourite', 'fav')
 )
 async def favorite(ctx: Context, role: Optional[Role] = None):
-    members = role.members if role else ctx.guild.members
+    members = role.members if role else (ctx.guild.members if ctx.guild else [])
 
     if not members:
         await ctx.message.add_reaction('⁉️')
