@@ -1,11 +1,12 @@
 from datetime import datetime
-from random import choice
+from random import choice, randint
 from typing import Optional
 
 from discord import Member, Role
 from discord.ext.commands import Context
 
 from .. import bot
+from ..conf import PANDA_EMOJI
 from ..utils import local_seed
 
 QUOTES = (
@@ -75,7 +76,7 @@ async def motivate(ctx: Context, who: Optional[Member] = None):
     description='Tell me Panda\'s favorite member',
     brief='Who is Panda\'s favorite member?',
     usage='[<user-role-to-choose-member-from>]',
-    aliases=('favourite',)
+    aliases=('favourite', 'fav')
 )
 async def favorite(ctx: Context, role: Optional[Role] = None):
     members = role.members if role else ctx.guild.members
@@ -89,6 +90,19 @@ async def favorite(ctx: Context, role: Optional[Role] = None):
         fav_member = choice(members)
 
     if role:
-        await ctx.send(f"My favorite member of {role} is now {fav_member.mention}. ❤️")
+        await ctx.send(f"My favorite {role} member is now {fav_member.mention}. ❤️")
     else:
         await ctx.send(f"My favorite member is now {fav_member.mention}. ❤️")
+
+@bot.command(
+    description='Tell me current value of ESN spirit',
+    brief='What\'s the current value of ESN spirit?',
+    aliases=('esn-spirit', )
+)
+async def spirit(ctx: Context):
+    now = datetime.now()
+
+    with local_seed(hash(f'{now.day}-{now.hour}-{now.minute // 10}')):
+        value = randint(42, 10**3)
+
+    await ctx.send(f"The current value of the **ESN spirit is {value}**️. {PANDA_EMOJI}")
