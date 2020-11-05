@@ -98,12 +98,14 @@ async def split(ctx: Context, role_to_split: Role, category: CategoryChannel):
 
     results: Dict[VoiceChannel, Set[Member]] = {c: set() for c in voice_channels}
 
-    for i, member in enumerate(members_to_split):
+    i = 0
+    for member in members_to_split:
         target_channel = voice_channels[i % voice_channels_count]
         try:
             await member.move_to(target_channel)
             results[target_channel].add(member)
-
+            # move pointer only when user was been moved (w/o scale with forloop)
+            i += 1
         except HTTPException as e:
             not_moved.add(member)
 
