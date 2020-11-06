@@ -2,16 +2,18 @@ import re
 from _operator import attrgetter
 from builtins import map
 from operator import attrgetter
-from random import shuffle, choice
-from typing import Dict, Set, Iterable, List, Tuple
+from random import shuffle
+from typing import Dict, Set, List, Tuple
 
-from discord import VoiceChannel, Message, Role, HTTPException, CategoryChannel, Embed, Member
+from discord import VoiceChannel, Message, Role, HTTPException, CategoryChannel, Member
 from discord.ext.commands import Context
 
-from .. import bot, logger
-from ..checks import check_if_has_any_of_roles
+from .exceptions import NoUsersFoundInRole, NoNumberedVoiceChannelsInCategory
+from .. import bot
+from ..checks import board_or_coord_role_required
+from ..utils import reply_embed
 
-has_sf_permission = check_if_has_any_of_roles({'Board', 'Coordinator'})
+has_sf_permission = board_or_coord_role_required
 
 VOICE_CHANNEL_TARGETS_RE = re.compile(r'.*\d+$')
 
@@ -21,11 +23,10 @@ VOICE_CHANNEL_TARGETS_RE = re.compile(r'.*\d+$')
     brief='Speedfriending module',
     usage='<subcommand>',
 )
+@has_sf_permission
 async def sf(ctx: Context):
-    logger.warning('Unhandled message: %s.', ctx.message.content)
-
     if ctx.invoked_subcommand is None:
-        await ctx.message.add_reaction('⁉️')
+        await ctx.send_help(sf)
 
 
 @sf.command(
@@ -35,7 +36,6 @@ async def sf(ctx: Context):
     description='Finds all online member in role with ACTIVE call (specified by @tagged role) and moves them to one '
                 'specific voice channel (specified by name w/o #).',
 )
-@has_sf_permission
 async def collect(ctx: Context, role_to_collect: Role, collect_where: VoiceChannel):
     moved = set()
     not_moved = set()
@@ -48,20 +48,26 @@ async def collect(ctx: Context, role_to_collect: Role, collect_where: VoiceChann
             not_moved.add(m)
 
     m: Message = ctx.message
-    await m.add_reaction('✅')
-
-    quote = f'> `{m.content}`\n'
+    embed, send = reply_embed(ctx=ctx, title='Speedfriending collect', description=f'> `{m.content}`')
 
     if moved:
-        await ctx.send(f'{quote} Found {len(moved)} members were moved to {collect_where.mention}: '
-                       f'{", ".join(map(attrgetter("nick"), moved))}.')
+        embed.add_field(
+            name='Success',
+            value=f'Found {len(moved)} members were moved to {collect_where.mention}: ' \
+                  f'{", ".join(filter(None, map(attrgetter("display_name"), moved)))}.'
+        )
 
     if not_moved:
-        await ctx.send(f'{quote} Unfortunately {len(not_moved)} members were not moved: '
-                       f'{", ".join(map(attrgetter("nick"), not_moved))}.')
+        embed.add_field(
+            name='Fail',
+            value=f'Unfortunately {len(not_moved)} members were not moved: ' \
+                  f'{", ".join(filter(None, map(attrgetter("display_name"), not_moved)))}.'
+        )
 
     if not (moved or not_moved):
-        await ctx.send(f'{quote} No members in role {role_to_collect.mention} found.')
+        raise NoUsersFoundInRole(role_to_collect.mention)
+
+    await send()
 
 
 @sf.command(
@@ -71,14 +77,12 @@ async def collect(ctx: Context, role_to_collect: Role, collect_where: VoiceChann
     description='Finds all online member in role with ACTIVE call (specified by @tagged role) and splits them equally'
                 'to all voice channels in category (by name) ending with NUMBER.',
 )
-@has_sf_permission
 async def split(ctx: Context, role_to_split: Role, category: CategoryChannel):
     not_moved = set()
     members_to_split: List[Member] = role_to_split.members
 
     if not members_to_split:
-        await ctx.send(f'Sorry, no members found in role {role_to_split.name}.')
-        return
+        raise NoUsersFoundInRole(role_to_split.mention)
 
     shuffle(members_to_split)
 
@@ -92,9 +96,7 @@ async def split(ctx: Context, role_to_split: Role, category: CategoryChannel):
     voice_channels_count = len(voice_channels)
 
     if not voice_channels_count:
-        await ctx.send(f'Sorry, no available voice channels found in category {category.name}.\n*Maybe channels don\'t '
-                       f'have the numbers?*')
-        return
+        raise NoNumberedVoiceChannelsInCategory(category.name)
 
     results: Dict[VoiceChannel, Set[Member]] = {c: set() for c in voice_channels}
 
@@ -109,12 +111,13 @@ async def split(ctx: Context, role_to_split: Role, category: CategoryChannel):
         except HTTPException as e:
             not_moved.add(member)
 
-    embed = Embed(
-        title="Speedfriending",
+    embed, send = reply_embed(
+        ctx=ctx,
+        title="Speedfriending split",
         description=f"Success, {len(members_to_split) - len(not_moved)} members in role {role_to_split.mention}"
-                    f"has been split into {len(results)} channels:",
-        color=ctx.me.top_role.color,
+                    f"has been split into {len(results)} channels:"
     )
+
     for channel, members in results.items():
         embed.add_field(
             name=f'{channel.name}',
@@ -126,7 +129,5 @@ async def split(ctx: Context, role_to_split: Role, category: CategoryChannel):
             name='Unable to move',
             value=', '.join(tuple(map(attrgetter('mention'), not_moved)))
         )
-    await ctx.send(embed=embed)
 
-    message: Message = ctx.message
-    await message.add_reaction('✅')
+    await send()

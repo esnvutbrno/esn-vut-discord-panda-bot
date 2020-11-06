@@ -1,9 +1,9 @@
-import traceback
-
 from discord import HTTPException
-from discord.ext.commands import Cog, CommandNotFound, BadArgument, NoPrivateMessage, DisabledCommand
+from discord.ext.commands import Cog, CommandNotFound, BadArgument, NoPrivateMessage, DisabledCommand, CheckFailure, \
+    Context, MissingRequiredArgument, UserInputError
 
 from bot import logger
+from bot.utils import reply_error_embed
 
 
 class CommandErrorHandler(Cog):
@@ -11,7 +11,7 @@ class CommandErrorHandler(Cog):
         self.bot = bot
 
     @Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, ctx: Context, error):
         """The event triggered when an error is raised while invoking a command.
         Parameters
         ------------
@@ -28,26 +28,31 @@ class CommandErrorHandler(Cog):
             if cog._get_overridden_method(cog.cog_command_error) is not None:
                 return
 
-        ignored = (CommandNotFound, )
         error = getattr(error, 'original', error)
 
-        if isinstance(error, ignored):
-            return
+        if isinstance(error, (CheckFailure, CommandNotFound)):
+            embed, send = reply_error_embed(ctx=ctx, error=error)
+            await send()
 
-        if isinstance(error, DisabledCommand):
-            await ctx.send(f'{ctx.command} has been disabled.')
+        elif isinstance(error, DisabledCommand):
+            embed, send = reply_error_embed(ctx=ctx, error=f'{ctx.command} has been disabled.')
+            await send()
 
         elif isinstance(error, NoPrivateMessage):
+            embed, send = reply_error_embed(ctx=ctx, error=error)
+            await ctx.message.add_reaction('🛑')
+
             try:
-                await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
+                await ctx.author.send(embed=embed)
             except HTTPException:
                 pass
 
+        elif isinstance(error, UserInputError):
+            embed, send = reply_error_embed(ctx=ctx, error=error)
+            await send()
+
         elif isinstance(error, BadArgument):
-            if ctx.command.qualified_name == 'tag list':
-                await ctx.send('I could not find that member. Please try again.')
+            logger.warning('Bad argument: %s', error)
 
         else:
             logger.exception(error)
-
-        await ctx.message.add_reaction('💀')

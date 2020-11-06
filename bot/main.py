@@ -3,6 +3,7 @@ import discord
 from . import bot, config, logger
 # noinspection PyUnresolvedReferences
 from .commands import motivation, welcome, speedfriending
+from .error_handler import CommandErrorHandler
 
 
 @bot.event
@@ -18,7 +19,7 @@ async def on_ready():
 
 
 def main():
-    # bot.add_cog(CommandErrorHandler(bot))
+    bot.add_cog(CommandErrorHandler(bot))
     bot.run(config('BOT_TOKEN'))
 
 

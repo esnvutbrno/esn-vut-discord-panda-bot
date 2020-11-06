@@ -7,7 +7,7 @@ from discord.ext.commands import Context
 
 from .. import bot
 from ..conf import PANDA_EMOJI
-from ..utils import local_seed
+from ..utils import local_seed, reply_embed
 
 QUOTES = (
     "“Service to others is the rent you pay for your room here on Earth.”**  — Muhammad Ali** ",
@@ -94,15 +94,16 @@ async def favorite(ctx: Context, role: Optional[Role] = None):
     else:
         await ctx.send(f"My favorite member is now {fav_member.mention}. ❤️")
 
+
 @bot.command(
     description='Tell me current value of ESN spirit',
     brief='What\'s the current value of ESN spirit?',
-    aliases=('esn-spirit', )
+    aliases=('esn-spirit',)
 )
 async def spirit(ctx: Context):
     now = datetime.now()
 
     with local_seed(hash(f'{now.day}-{now.hour}-{now.minute // 10}')):
-        value = randint(42, 10**3)
+        value = randint(42, 10 ** 3)
 
     await ctx.send(f"The current value of the **ESN spirit is {value}**️. {PANDA_EMOJI}")
