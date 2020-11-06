@@ -8,3 +8,4 @@ services:
       - ./.env
     volumes:
       - .:/usr/src/app
+      - ./memecon-memes/:/panda-bot/memes/
