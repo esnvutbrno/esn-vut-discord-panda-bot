@@ -7,7 +7,7 @@ from discord.ext.commands import Context
 
 from .. import bot
 from ..conf import PANDA_EMOJI
-from ..utils import local_seed, reply_embed
+from ..utils import local_seed, reply_embed, MemberIncludingAuthorConverter
 
 QUOTES = (
     "“Service to others is the rent you pay for your room here on Earth.”**  — Muhammad Ali** ",
@@ -67,7 +67,7 @@ QUOTES = (
     description='Send me some supportive quote!',
     brief='Do you want to motivate somebody?',
 )
-async def motivate(ctx: Context, who: Optional[Member] = None):
+async def motivate(ctx: Context, who: MemberIncludingAuthorConverter = None):
     eol = '\n'
     await ctx.send(f"{f'Only for {who.mention}:{eol}' if who else ''}> {choice(QUOTES)}")
 
@@ -107,3 +107,12 @@ async def spirit(ctx: Context):
         value = randint(42, 10 ** 3)
 
     await ctx.send(f"The current value of the **ESN spirit is {value}**️. {PANDA_EMOJI}")
+
+@bot.command(
+    description='High-five somebody to support him or her!',
+    brief='Do you want to congratulate to somebody?',
+    aliases=('highfive', 'high-five',)
+)
+async def high_five(ctx: Context, who: MemberIncludingAuthorConverter = None):
+    who = who or ctx.author
+    await ctx.send(f"**Highfive for **{who.mention}! 🙏")

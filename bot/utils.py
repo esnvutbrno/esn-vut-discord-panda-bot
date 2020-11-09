@@ -3,7 +3,7 @@ import random
 from typing import Tuple, Any, Union, Optional
 
 from discord import Embed, File, Member
-from discord.ext.commands import Context
+from discord.ext.commands import Context, MemberConverter as OriginalMemberConverter, MemberNotFound
 
 from bot.conf import PANDA_LOGO_IMAGE_PATH, PANDA_BOT_URL, DEFAULT_REPLY_COLOR, SAD_REACTION_EMOJIS
 
@@ -53,3 +53,17 @@ def reply_error_embed(ctx: Context, error: Union[Exception, str]) -> Tuple[Embed
         author_name=f'Panda is {random.choice("disappointed sad frustrated".split())}',
         reaction='🛑'
     )
+
+
+class MemberIncludingAuthorConverter(OriginalMemberConverter):
+    MYSELFS = ('me',)
+
+    async def convert(self, ctx: Context, argument):
+        print('conv', argument)
+        try:
+            return await super().convert(ctx, argument)
+        except MemberNotFound:
+            if argument in self.MYSELFS:
+                return ctx.author
+
+        raise MemberNotFound(argument)
