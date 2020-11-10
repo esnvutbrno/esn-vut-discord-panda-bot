@@ -67,7 +67,7 @@ QUOTES = (
     description='Send me some supportive quote!',
     brief='Do you want to motivate somebody?',
 )
-async def motivate(ctx: Context, who: MemberIncludingAuthorConverter = None):
+async def motivate(ctx: Context, *, who: MemberIncludingAuthorConverter = None):
     eol = '\n'
     await ctx.send(f"{f'Only for {who.mention}:{eol}' if who else ''}> {choice(QUOTES)}")
 
@@ -110,9 +110,10 @@ async def spirit(ctx: Context):
 
 @bot.command(
     description='High-five somebody to support him or her!',
-    brief='Do you want to congratulate to somebody?',
-    aliases=('highfive', 'high-five',)
+    brief='Do you want to give a pandas high-five to somebody?',
+    aliases=('high-five',),
+    name='highfive',
 )
-async def high_five(ctx: Context, who: MemberIncludingAuthorConverter = None):
+async def high_five(ctx: Context, *, who: MemberIncludingAuthorConverter = None):
     who = who or ctx.author
     await ctx.send(f"**Highfive for **{who.mention}! 🙏")
