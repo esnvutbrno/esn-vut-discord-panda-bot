@@ -5,7 +5,8 @@ PROJECT_DIR = os.path.join(dirname(__file__), '..')
 DATA_DIR = os.path.join(PROJECT_DIR, 'data')
 
 PANDA_EMOJI = '<:panda:772918048892911617>'
-BOT_COMMAND_PREFIX = ('panda? ', 'panda?', 'panda! ', 'panda!', 'panda ', 'p! ', 'p!', 'p? ', 'p?')
+DEFAULT_BOT_PREFIX = 'panda!'
+BOT_COMMAND_PREFIX = ('panda? ', 'panda?', 'panda! ', DEFAULT_BOT_PREFIX, 'panda ', 'p! ', 'p!', 'p? ', 'p?')
 BOT_DESCRIPTION = '''Hello, I am Panda!\n'''
 LOGGER_NAME = 'panda-bot'
 

@@ -1,8 +1,11 @@
+from datetime import time, datetime
+
 import discord
 
 from . import bot, config, logger
 # noinspection PyUnresolvedReferences
 from .commands import motivation, welcome, speedfriending
+from .conf import DEFAULT_BOT_PREFIX
 from .error_handler import CommandErrorHandler
 
 
@@ -12,8 +15,11 @@ async def on_ready():
 
     await bot.change_presence(
         activity=discord.Activity(
-            name=f'panda!',
-            type=discord.ActivityType.listening
+            name=f'{DEFAULT_BOT_PREFIX} | \n{config("ENVIRONMENT")}@{config("VERSION")}',
+            type=discord.ActivityType.listening,
+            timestamps=dict(
+                start=datetime.now()
+            )
         )
     )
 
