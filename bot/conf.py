@@ -13,6 +13,10 @@ LOGGER_NAME = 'panda-bot'
 MEMES_DIR = '/panda-bot/memes/'
 
 PANDA_LOGO_IMAGE_PATH = os.path.join(DATA_DIR, 'panda.png')
+ERROR_GIFS = tuple(map(
+    partial(os.path.join, os.path.join(DATA_DIR, 'error-gifs')),
+    listdir(os.path.join(DATA_DIR, 'error-gifs'))
+))
 
 PANDA_BOT_URL = 'https://github.com/thejoeejoee/esn-vut-discord-panda-bot'
 DEFAULT_REPLY_COLOR = 0xcc3300
