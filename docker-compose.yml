@@ -9,4 +9,3 @@ services:
     volumes:
       - .:/usr/src/app
       - ./memecon-memes/:/panda-bot/memes/
-      - ./music/:/panda-bot/music/

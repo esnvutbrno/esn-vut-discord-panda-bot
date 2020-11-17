@@ -25,14 +25,6 @@ async def on_ready():
     )
 
 
-@bot.event
-async def on_voice_state_update(who: Member, from_state: VoiceState, to_state: VoiceState):
-    logger.info(
-        'Voice state update %s: %s -> %s',
-        who.nick,
-        from_state.channel,
-        to_state.channel
-    )
 
 
 def main():
