@@ -1,4 +1,4 @@
-FROM python:3.8.5
+FROM gorialis/discord.py:3.8.6-alpine-minimal
 
 WORKDIR /usr/src/app
 

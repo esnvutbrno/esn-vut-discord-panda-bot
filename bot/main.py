@@ -1,6 +1,7 @@
-from datetime import time, datetime
+from datetime import datetime
 
 import discord
+from discord import Member, VoiceState
 
 from . import bot, config, logger
 # noinspection PyUnresolvedReferences
@@ -18,14 +19,25 @@ async def on_ready():
             name=f'{DEFAULT_BOT_PREFIX} | \n{config("ENVIRONMENT")}@{config("VERSION")}',
             type=discord.ActivityType.listening,
             timestamps=dict(
-                start=datetime.now()
+                start=datetime.now().timestamp()
             )
         )
     )
 
 
+@bot.event
+async def on_voice_state_update(who: Member, from_state: VoiceState, to_state: VoiceState):
+    logger.info(
+        'Voice state update %s: %s -> %s',
+        who.nick,
+        from_state.channel,
+        to_state.channel
+    )
+
+
 def main():
     bot.add_cog(CommandErrorHandler(bot))
+    # bot.add_cog(Voice(bot))
     bot.run(config('BOT_TOKEN'))
 
 
