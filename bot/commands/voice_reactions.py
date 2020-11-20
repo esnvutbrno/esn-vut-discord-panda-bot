@@ -1,3 +1,4 @@
+import asyncio
 from random import choice
 from typing import Optional
 
@@ -38,6 +39,7 @@ async def on_voice_state_update(who: Member, from_state: VoiceState, to_state: V
         await guild.voice_client.move_to(to_channel)
     else:
         await to_channel.connect()
-
+        
+    await asyncio.sleep(1)
     source = PCMVolumeTransformer(FFmpegPCMAudio(choice(VoiceReactionsConf.WELCOME_REACTIONS)))
     guild.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
