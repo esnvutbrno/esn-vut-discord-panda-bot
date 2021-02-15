@@ -15,9 +15,8 @@ async def on_member_join(member: Member):
 
     g: Guild = member.guild
 
-    rules: Optional[TextChannel] = discord.utils.get(g.channels, name='rules')
-
     await g.system_channel.send(
-        f'Cheers {member.mention}, **Panda from ESN VUT Brno** welcomes you here! {PANDA_EMOJI}\n'
-        f'*Shhh, I recommend you to see the {rules.mention if rules else "#rules"} channel.*'
+        f'Cheers {member.mention}, **Panda from {g.name}** welcomes you here! {PANDA_EMOJI}\n'
+        f'*Shhh, the panel of the left offers plenty of channels of various quality, and level of fun - feel free to '
+        f'explore them!*'
     )
