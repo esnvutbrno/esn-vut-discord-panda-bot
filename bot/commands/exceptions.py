@@ -6,6 +6,11 @@ class NoUsersFoundInRole(UserInputError):
         super().__init__(message or f'No users found in role {role}.', *args)
 
 
+class NoUsersWithActiveCall(UserInputError):
+    def __init__(self, role=None, message=None, *args):
+        super().__init__(message or f'No users with active call found in role {role}.', *args)
+
+
 class NoNumberedVoiceChannelsInCategory(UserInputError):
     def __init__(self, category=None, message=None, *args):
         super().__init__(

@@ -1,3 +1,4 @@
+import asyncio
 import re
 from _operator import attrgetter
 from builtins import map
@@ -8,7 +9,7 @@ from typing import Dict, Set, List, Tuple
 from discord import VoiceChannel, Message, Role, HTTPException, CategoryChannel, Member
 from discord.ext.commands import Context
 
-from .exceptions import NoUsersFoundInRole, NoNumberedVoiceChannelsInCategory
+from .exceptions import NoUsersFoundInRole, NoNumberedVoiceChannelsInCategory, NoUsersWithActiveCall
 from .. import bot
 from ..checks import board_or_coord_role_required
 from ..utils import reply_embed
@@ -40,12 +41,14 @@ async def collect(ctx: Context, role_to_collect: Role, collect_where: VoiceChann
     moved = set()
     not_moved = set()
 
-    for m in role_to_collect.members:
+    async def move(member: Member):
         try:
-            await m.move_to(collect_where)
-            moved.add(m)
+            await member.move_to(collect_where)
+            moved.add(member)
         except HTTPException as e:
-            not_moved.add(m)
+            not_moved.add(member)
+
+    await asyncio.wait(map(move, role_to_collect.members))
 
     m: Message = ctx.message
     embed, send = reply_embed(ctx=ctx, title='Speedfriending collect', description=f'> `{m.content}`')
@@ -69,6 +72,8 @@ async def collect(ctx: Context, role_to_collect: Role, collect_where: VoiceChann
 
     await send()
 
+def _has_active_call(m: Member):
+    return bool(m.voice and m.voice.channel)
 
 @sf.command(
     name='split',
@@ -83,6 +88,11 @@ async def split(ctx: Context, role_to_split: Role, category: CategoryChannel):
 
     if not members_to_split:
         raise NoUsersFoundInRole(role_to_split.mention)
+
+    members_to_split = list(filter(_has_active_call, members_to_split))
+
+    if not members_to_split:
+        raise NoUsersWithActiveCall(role_to_split.mention)
 
     shuffle(members_to_split)
 
@@ -100,34 +110,38 @@ async def split(ctx: Context, role_to_split: Role, category: CategoryChannel):
 
     results: Dict[VoiceChannel, Set[Member]] = {c: set() for c in voice_channels}
 
-    i = 0
-    for member in members_to_split:
-        target_channel = voice_channels[i % voice_channels_count]
+    async def move(who: Member, where: VoiceChannel):
         try:
-            await member.move_to(target_channel)
-            results[target_channel].add(member)
+            await who.move_to(where)
+            results[where].add(who)
             # move pointer only when user was been moved (w/o scale with forloop)
-            i += 1
-        except HTTPException as e:
-            not_moved.add(member)
+        except HTTPException:
+            not_moved.add(who)
+
+    await asyncio.wait([
+        move(
+            who=member,
+            where=voice_channels[i % voice_channels_count]
+        ) for i, member in enumerate(members_to_split)
+    ])
 
     embed, send = reply_embed(
         ctx=ctx,
         title="Speedfriending split",
-        description=f"Success, {len(members_to_split) - len(not_moved)} members in role {role_to_split.mention}"
+        description=f"Success, {len(members_to_split) - len(not_moved)} members in role {role_to_split.mention} "
                     f"has been split into {len(results)} channels:"
     )
 
     for channel, members in results.items():
         embed.add_field(
             name=f'{channel.name}',
-            value=f'{", ".join(map(attrgetter("mention"), members)) or "no members"}',
+            value=f'{", ".join(map(attrgetter("display_name"), members)) or "no members"}',
             inline=False,
         )
     if not_moved:
         embed.add_field(
             name='Unable to move',
-            value=', '.join(tuple(map(attrgetter('mention'), not_moved)))
+            value=', '.join(tuple(map(attrgetter('display_name'), not_moved)))
         )
 
     await send()
